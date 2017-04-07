@@ -92,7 +92,7 @@ var model = {
      }
  };
 
-factory.create({ model })
+factory.create({ model: model })
 .then( (rm) => rm.build( req.body )
 .then( (record) => {
     console.log("record: ", record );
@@ -273,6 +273,10 @@ Add unit tests for any new or changed functionality. Lint and test your code.
 * * *
 
 ## Version History
+
+#### Version 0.1.1
+
+* updated documentation
 
 #### Version 0.1.0 
 

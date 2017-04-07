@@ -62,7 +62,7 @@ var model = {
      }
  };
 
-factory.create({ model })
+factory.create({ model: model })
 .then( (rm) => rm.build( req.body )
 .then( (record) => {
     console.log("record: ", record );
