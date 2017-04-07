@@ -1,6 +1,6 @@
 /**
-    Module: marchio-core-record
-      Test: smoke-test
+    Module: marchio-core-app
+      Test: record-test
     Author: Mitch Allen
 */
 
@@ -10,13 +10,33 @@
 
 "use strict";
 
-var request = require('supertest'),
-    should = require('should'),
-    modulePath = "../modules/index";
+var should = require('should'),
+    modulePath = "../modules/index",
+    TEST_PORT = process.env.TEST_PORT || 8080;
 
-describe('module factory smoke test', () => {
+describe('record', () => {
 
     var _factory = null;
+
+    var _modelName = 'coretest';
+
+    var _testModel = {
+        name: _modelName,
+        fields: {
+            email:    { type: String, required: true },
+            status:   { type: String, required: true, default: "NEW" },
+            // In a real world example, password would be hashed by middleware before being saved
+            password: { type: String, select: false },  // select: false, exclude from query results
+            // alpha:    { type: String, required: true, default: "AAA" },
+            // beta :    { type: String, default: "BBB" },
+        }
+    };
+
+    var _req = {
+        body: {
+            email: "foo@example.com"
+        }
+    };
 
     before( done => {
         // Call before all tests
@@ -45,30 +65,155 @@ describe('module factory smoke test', () => {
         done();
     });
 
-    it('create method with no spec should return object', done => {
-        _factory.create()
-        .then(function(obj){
-            should.exist(obj);
+    it('.create should return object', done => {
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            should.exist(recMgr.select);
+            should.exist(recMgr.fields);
             done();
         })
-        .catch( function(err) { 
+         .catch((err) => { 
             console.error(err); 
             done(err);  // to pass on err, remove err (done() - no arguments)
         });
     });
 
-    it('health method should return ok', done => {
-        _factory.create({})
-        .then(function(obj) {
-            return obj.health();
+    it('.build should reject if required field with no default is missing', done => {
+
+        var mockReq = {
+            body: {
+                // no fields
+            }
+        };
+
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            return recMgr.build( mockReq.body );
+            // done();
         })
-        .then(function(result) {
-            result.should.eql("OK");
-            done();
-        })
-        .catch( function(err) { 
-            console.error(err);
-            done(err); 
+         .catch((err) => {  
+            // console.error(err); 
+            done();  // to pass on err, remove err (done(err) => done() - no arguments)
         });
     });
+
+    it('.build method should set default field', done => {
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            return recMgr.build( _req.body );
+        })
+        .then((record) => {
+            // console.log( record );
+            should.exist(record.status);
+            record.status.should.eql(_testModel.fields.status.default);
+            done();
+        })
+         .catch((err) => {  
+            console.error(err); 
+            done(err);  // to pass on err, remove err (done() - no arguments)
+        });
+    });
+
+    it('.build method should override default field if set', done => {
+        var mockReq = {
+            body: {
+                email: "foo@example.com",
+                status: "UPDATE",
+                password: "password1234!"
+            }
+        };
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            return recMgr.build( mockReq.body );
+        })
+        .then((record) => {
+            // console.log( record );
+            should.exist(record.status);
+            record.status.should.eql(mockReq.body.status);
+            done();
+        })
+         .catch((err) => { 
+            console.error(err); 
+            done(err);  // to pass on err, remove err (done() - no arguments)
+        });
+    });
+
+    it('.select method should only return selected fields', done => {
+        var mockReq = {
+            body: {
+                email: "foo@example.com",
+                status: "UPDATE",
+                password: "password1234!"
+            }
+        };
+
+        var recMgr = null;
+
+        _factory.create( { model: _testModel} )
+        .then((rm) => {
+            recMgr = rm;
+            should.exist(recMgr);
+            should.exist(recMgr.select);
+            return recMgr.build( mockReq.body );
+        })
+        .then((record) => recMgr.select( record ))
+        .then((response) => {
+            // console.log(response);
+            should.exist(response);
+            should.exist(response.email);
+            should.exist(response.status);
+            should.not.exist(response.password);
+            response.email.should.eql(mockReq.body.email);
+            response.status.should.eql(mockReq.body.status);
+            done();
+        })
+         .catch((err) => {  
+            console.error(err); 
+            done(err);  // to pass on err, remove err (done() - no arguments)
+        });
+    });
+
+
+    it('.fields method should return all fields listed', done => {
+        var mockReq = {
+            body: {
+                email: "foo@mexample.com",
+                status: "UPDATE",
+                password: "password1234!"
+            }
+        };
+        var fList = ["email", "status", "password"];
+        var recMgr = null;
+        _factory.create( { model: _testModel} )
+        .then((rm) => {
+            recMgr = rm;
+            should.exist(recMgr);
+            should.exist(recMgr.fields);
+            return recMgr.build( mockReq.body );
+        })
+        .then((record) => recMgr.fields( fList, record ) )
+        .then((response) => {
+            should.exist(response);
+            should.exist(response.email);
+            should.exist(response.status);
+            should.exist(response.password);
+            response.email.should.eql(mockReq.body.email);
+            response.status.should.eql(mockReq.body.status);
+            response.password.should.eql(mockReq.body.password);
+            done();
+        })
+        .catch((err) => { 
+            console.error(err); 
+            done(err);  // to pass on err, remove err (done() - no arguments)
+        });
+    });
+    
 });
