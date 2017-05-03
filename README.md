@@ -49,6 +49,7 @@ Module
     * [.package()](#module_marchio-core-record+package)
     * [.build(body)](#module_marchio-core-record+build) ⇒ <code>Promise</code>
     * [.select(body)](#module_marchio-core-record+select) ⇒ <code>Promise</code>
+    * [.selectedFields()](#module_marchio-core-record+selectedFields) ⇒ <code>Promise</code>
     * [.fields(fields, body)](#module_marchio-core-record+fields) ⇒ <code>Promise</code>
 
 <a name="module_marchio-core-record+package"></a>
@@ -144,6 +145,50 @@ factory.create({ model: model })
     return rm.build( { req.body );
 })
 .then( (record) => recMgr.select( record ) )
+.then( (response) => {
+     console.log( response );
+ })
+.catch( function(err) { 
+    console.error(err); 
+});
+```
+<a name="module_marchio-core-record+selectedFields"></a>
+
+### marchio-core-record.selectedFields() ⇒ <code>Promise</code>
+Return a list containing the names of fields that are selected
+
+**Kind**: instance method of <code>[marchio-core-record](#module_marchio-core-record)</code>  
+**Returns**: <code>Promise</code> - that resolves to a list of selected field names  
+**Example** *(Usage Example)*  
+```js
+var factory = require("marchio-core-record");
+
+var modelName = 'coretest';
+
+var model = {
+    name: modelName,
+    fields: {
+        email:    { type: String, required: true },
+        status:   { type: String, required: true, default: "NEW" },
+        // In a real world example, password would be hashed by middleware before being saved
+        password: { type: String, select: false },  // select: false, exclude from query results
+     }
+};
+ 
+ // normally this would come from an http method handler
+var req = {
+     body: {
+         email: "foo@example.com"
+     }
+};
+
+var recMgr = null; 
+
+factory.create({ model: model })
+.then( (recMgr) => {
+    recMgr = rm;
+    return recMgr.selectedFields();
+})
 .then( (response) => {
      console.log( response );
  })
@@ -248,6 +293,7 @@ var model = {
  });
 ```
 
+
 * * *
 
 ## Testing
@@ -273,6 +319,10 @@ Add unit tests for any new or changed functionality. Lint and test your code.
 * * *
 
 ## Version History
+
+#### Version 0.1.2
+
+* added __selectedFields__ method
 
 #### Version 0.1.1
 

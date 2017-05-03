@@ -181,6 +181,27 @@ describe('record', () => {
         });
     });
 
+    it('.selectedFields should return list selected field names', done => {
+        var recMgr = null;
+        _factory.create( { model: _testModel} )
+        .then((rm) => {
+            recMgr = rm;
+            should.exist(recMgr);
+            should.exist(recMgr.selectedFields);
+            return recMgr.selectedFields();
+        })
+        .then((response) => {
+            // console.log(response);
+            should.exist(response);
+            response.length.should.eql(2);
+            response.should.eql(['email','status']);
+            done();
+        })
+         .catch((err) => {  
+            console.error(err); 
+            done(err);  // to pass on err, remove err (done() - no arguments)
+        });
+    });
 
     it('.fields method should return all fields listed', done => {
         var mockReq = {

@@ -210,6 +210,66 @@ module.exports.create = (spec) => {
                 });
             },
 
+            /** Return a list containing the names of fields that are selected
+              * @function
+              * @instance
+              * @memberof module:marchio-core-record
+              * @returns {Promise} that resolves to a list of selected field names
+              * @example <caption>Usage Example</caption>
+              * var factory = require("marchio-core-record");
+              * 
+              * var modelName = 'coretest';
+              * 
+              * var model = {
+              *     name: modelName,
+              *     fields: {
+              *         email:    { type: String, required: true },
+              *         status:   { type: String, required: true, default: "NEW" },
+              *         // In a real world example, password would be hashed by middleware before being saved
+              *         password: { type: String, select: false },  // select: false, exclude from query results
+              *      }
+              * };
+              *  
+              *  // normally this would come from an http method handler
+              * var req = {
+              *      body: {
+              *          email: "foo@example.com"
+              *      }
+              * };
+              *
+              * var recMgr = null; 
+              *
+              * factory.create({ model: model })
+              * .then( (recMgr) => {
+              *     recMgr = rm;
+              *     return recMgr.selectedFields();
+              * })
+              * .then( (response) => {
+              *      console.log( response );
+              *  })
+              * .catch( function(err) { 
+              *     console.error(err); 
+              * });
+              */
+            selectedFields: () => {
+                return new Promise((resolve, reject) => {
+                    var list = [];
+                    for (var property in _fields) {
+                        if (_fields.hasOwnProperty(property)) {
+                            // console.log("PROPERTY:", property );
+                            var fld = _fields[ property ];
+                            // console.log("...:", fld  );
+                            var selected = fld.select === undefined || fld.select;
+                            if( selected ) {
+                                // console.log( "SELECTED: ", property );
+                                list.push(property);
+                            }
+                        }
+                    }
+                    resolve(list);
+                });
+            },
+
             /** Build a record including all fields a list and a record containing original values
               * @function
               * @instance
