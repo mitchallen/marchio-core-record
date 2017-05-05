@@ -146,6 +146,60 @@ module.exports.create = (spec) => {
                 });
             },
 
+            /** Build an update record based on the model and an input record containing original values
+              * @function
+              * @instance
+              * @memberof module:marchio-core-record
+              * @param {Object} body An object where properties represent fields from a response (like req.response)
+              * @returns {Promise} that resolves to a record object containing the resulting record
+              * @example <caption>Usage Example</caption>
+              * var factory = require("marchio-core-record");
+              * 
+              * var modelName = 'coretest';
+              * 
+              * var model = {
+              *     name: modelName,
+              *     fields: {
+              *         email:    { type: String, required: true },
+              *         status:   { type: String, required: true, default: "NEW" },
+              *         // In a real world example, password would be hashed by middleware before being saved
+              *         password: { type: String, select: false },  // select: false, exclude from query results
+              *      }
+              *  };
+              *  
+              *  // normally this would come from an http method handler
+              *  var req = {
+              *      body: {
+              *          email: "foo@example.com"
+              *      }
+              *  };
+              * 
+              * factory.create({ model: model })
+              * .then( (rm) => rm.buildUpdate( req.body )
+              * .then( (record) => {
+              *     console.log("record: ", record );
+              * })
+              * .catch( function(err) { 
+              *     console.error(err); 
+              * });
+              */
+            buildUpdate: ( body ) => {
+                return new Promise((resolve, reject) => {
+                    var record = {};
+                    for (var property in _fields) {
+                        if (_fields.hasOwnProperty(property)) {
+                            // console.log("PROPERTY:", property );
+                            var fld = _fields[ property ];
+                            // console.log("...:", fld  );
+                            if(body[property]) {
+                                record[property] = body[property];
+                            } 
+                        }
+                    }
+                    resolve(record);
+                });
+            },
+
             /** Build a record based on the selected fields in a model and a record containing original values
               * @function
               * @instance

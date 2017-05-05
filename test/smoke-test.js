@@ -81,13 +81,11 @@ describe('record', () => {
     });
 
     it('.build should reject if required field with no default is missing', done => {
-
         var mockReq = {
             body: {
                 // no fields
             }
         };
-
         _factory.create( { model: _testModel} )
         .then((recMgr) => {
             should.exist(recMgr);
@@ -133,6 +131,141 @@ describe('record', () => {
             should.exist(recMgr);
             should.exist(recMgr.build);
             return recMgr.build( mockReq.body );
+        })
+        .then((record) => {
+            // console.log( record );
+            should.exist(record.status);
+            record.status.should.eql(mockReq.body.status);
+            done();
+        })
+         .catch((err) => { 
+            console.error(err); 
+            done(err);  // to pass on err, remove err (done() - no arguments)
+        });
+    });
+
+    it('.buildUpdate should pass if required field with no default is missing', done => {
+        var mockReq = {
+            body: {
+                // no fields
+            }
+        };
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            return recMgr.buildUpdate( mockReq.body );
+        })
+        .then((record) => {
+            should.exist(record);
+            should.not.exist(record.email);
+            should.not.exist(record.status);
+            should.not.exist(record.password);
+            done();
+        })
+         .catch((err) => {  
+            // console.error(err); 
+            done( err );  // to pass on err, remove err (done(err) => done() - no arguments)
+        });
+    });
+
+    it('.buildUpdate should update field', done => {
+        var mockReq = {
+            body: {
+                status: "UPDATE",
+            }
+        };
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            return recMgr.buildUpdate( mockReq.body );
+        })
+        .then((record) => {
+            should.exist(record);
+            should.not.exist(record.email);
+            should.exist(record.status);
+            record.status.should.eql(mockReq.body.status);
+            should.not.exist(record.password);
+            done();
+        })
+         .catch((err) => {  
+            // console.error(err); 
+            done( err );  // to pass on err, remove err (done(err) => done() - no arguments)
+        });
+    });
+
+    it('.buildUpdate should update multiple fields', done => {
+        var mockReq = {
+            body: {
+                email: "test-update@example.com",
+                status: "UPDATE",
+            }
+        };
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            return recMgr.buildUpdate( mockReq.body );
+        })
+        .then((record) => {
+            should.exist(record);
+            should.exist(record.email);
+            record.email.should.eql(mockReq.body.email);
+            should.exist(record.status);
+            record.status.should.eql(mockReq.body.status);
+            should.not.exist(record.password);
+            done();
+        })
+         .catch((err) => {  
+            // console.error(err); 
+            done( err );  // to pass on err, remove err (done(err) => done() - no arguments)
+        });
+    });
+
+    it('.buildUpdate should not allow unknown field to be set', done => {
+        var mockReq = {
+            body: {
+                email: "test-update@example.com",
+                status: "UPDATE",
+                bogus: "this should not be allowed"
+            }
+        };
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            return recMgr.buildUpdate( mockReq.body );
+        })
+        .then((record) => {
+            should.exist(record);
+            should.exist(record.email);
+            record.email.should.eql(mockReq.body.email);
+            should.exist(record.status);
+            record.status.should.eql(mockReq.body.status);
+            should.not.exist(record.password);
+            should.not.exist(record.bogus);
+            done();
+        })
+         .catch((err) => {  
+            // console.error(err); 
+            done( err );  // to pass on err, remove err (done(err) => done() - no arguments)
+        });
+    });
+
+    it('.buildUpdate method should override default field if set', done => {
+        var mockReq = {
+            body: {
+                email: "foo@example.com",
+                status: "UPDATE",
+                password: "password1234!"
+            }
+        };
+        _factory.create( { model: _testModel} )
+        .then((recMgr) => {
+            should.exist(recMgr);
+            should.exist(recMgr.build);
+            return recMgr.buildUpdate( mockReq.body );
         })
         .then((record) => {
             // console.log( record );
